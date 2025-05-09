@@ -4,6 +4,10 @@ import static capaDatos.Conexion.getConexion;
 import entidades.Cliente;
 import entidades.Factura;
 import entidades.Reserva;
+import entidades.Usuario;
+import entidades.Reporte_Ventas;
+import entidades.Transporte;
+import entidades.Paquete_Turistico;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -452,7 +456,39 @@ public class Controlador {
         }
         return client;
     }
+    
+    /**
+     * Modulo Usuario
+    */
+    public void insertarUsuario(Usuario user) {
+        
+    }
+    
+    
+    public void modificarUsuario(Usuario user) {
+ 
+    }
+
+    public void eliminarUsuario(int id) {
+ 
+    }
+    
+    /**
+     * Modulo Reporte_Ventas
+    */
+    public void generarReporte(Reporte_Ventas reporte) {
+    // Aquí iría la lógica para generar el reporte según el periodo (Mensual, Trimestral, Anual)
+    }
+    
+    
+    /**
+     * Modulo Transporte
+    */
+
+    
+    /**
+     * Modulo Paquete_Turistico 
+    */
+
 
 }
-
-
