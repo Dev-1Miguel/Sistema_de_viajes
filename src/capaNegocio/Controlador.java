@@ -5,9 +5,6 @@ import entidades.Cliente;
 import entidades.Factura;
 import entidades.Reserva;
 import entidades.Usuario;
-import entidades.Reporte_Ventas;
-import entidades.Transporte;
-import entidades.Paquete_Turistico;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -458,37 +455,173 @@ public class Controlador {
     }
     
     /**
-     * Modulo Usuario
-    */
+ * Modulo Usuario
+     * @param user
+ */
     public void insertarUsuario(Usuario user) {
+        try {
+            Connection cone = getConexion();
+            PreparedStatement pst = cone.prepareStatement(
+                "INSERT INTO usuario (cedula, nombre_completo, correo_electronico, telefono, " +
+                "direccion, rol, nombre_usuario, contrasena) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         
+            pst.setString(1, user.getCedula());
+            pst.setString(2, user.getNombreCompleto());
+            pst.setString(3, user.getCorreoElectronico());
+            pst.setString(4, user.getTelefono());
+            pst.setString(5, user.getDireccion());
+            pst.setString(6, user.getRol());
+            pst.setString(7, user.getNombreUsuario());
+            pst.setString(8, user.getContrasena());
+        
+            pst.executeUpdate();
+            JOptionPane.showMessageDialog(null, "Usuario registrado correctamente", 
+                "INFORMACIÓN", JOptionPane.INFORMATION_MESSAGE);
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+            JOptionPane.showMessageDialog(null, "Error al registrar usuario", 
+            "ERROR", JOptionPane.ERROR_MESSAGE);
+        }
     }
-    
-    
     public void modificarUsuario(Usuario user) {
- 
+        try {
+            Connection cone = getConexion();
+            PreparedStatement pst = cone.prepareStatement(
+                "UPDATE usuario SET cedula=?, nombre_completo=?, correo_electronico=?, " +
+                "telefono=?, direccion=?, rol=?, nombre_usuario=?, contrasena=? WHERE id=?");
+
+            pst.setString(1, user.getCedula());
+            pst.setString(2, user.getNombreCompleto());
+            pst.setString(3, user.getCorreoElectronico());
+            pst.setString(4, user.getTelefono());
+            pst.setString(5, user.getDireccion());
+            pst.setString(6, user.getRol());
+            pst.setString(7, user.getNombreUsuario());
+            pst.setString(8, user.getContrasena());
+            pst.setInt(9, user.getId());
+
+            int affectedRows = pst.executeUpdate();
+            if (affectedRows > 0) {
+                JOptionPane.showMessageDialog(null, "Usuario modificado correctamente", 
+                    "INFORMACIÓN", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(null, "No se encontró el usuario a modificar", 
+                    "ADVERTENCIA", JOptionPane.WARNING_MESSAGE);
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+            JOptionPane.showMessageDialog(null, "Error al modificar usuario", 
+                "ERROR", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     public void eliminarUsuario(int id) {
- 
+        try {
+            Connection cone = getConexion();
+            PreparedStatement pst = cone.prepareStatement("DELETE FROM usuario WHERE id=?");
+            pst.setInt(1, id);
+
+            int affectedRows = pst.executeUpdate();
+            if (affectedRows > 0) {
+                JOptionPane.showMessageDialog(null, "Usuario eliminado correctamente", 
+                    "INFORMACIÓN", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(null, "No se encontró el usuario a eliminar", 
+                    "ADVERTENCIA", JOptionPane.WARNING_MESSAGE);
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+            JOptionPane.showMessageDialog(null, "Error al eliminar usuario", 
+                "ERROR", JOptionPane.ERROR_MESSAGE);
+        }
     }
-    
-    /**
-     * Modulo Reporte_Ventas
-    */
-    public void generarReporte(Reporte_Ventas reporte) {
-    // Aquí iría la lógica para generar el reporte según el periodo (Mensual, Trimestral, Anual)
+    public ArrayList<Usuario> listaUsuarios() {
+        ArrayList<Usuario> usuarios = new ArrayList<>();
+        try {
+            Connection cone = getConexion();
+            Statement st = cone.createStatement();
+            ResultSet resul = st.executeQuery(
+                "SELECT id, cedula, nombre_completo, correo_electronico, telefono, " +
+                "direccion, rol, nombre_usuario FROM usuario ORDER BY id");
+
+            while (resul.next()) {
+                Usuario u = new Usuario();
+                u.setId(resul.getInt("id"));
+                u.setCedula(resul.getString("cedula"));
+                u.setNombreCompleto(resul.getString("nombre_completo"));
+                u.setCorreoElectronico(resul.getString("correo_electronico"));
+                u.setTelefono(resul.getString("telefono"));
+                u.setDireccion(resul.getString("direccion"));
+                u.setRol(resul.getString("rol"));
+                u.setNombreUsuario(resul.getString("nombre_usuario"));
+
+                usuarios.add(u);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            JOptionPane.showMessageDialog(null, "Error al cargar lista de usuarios", 
+                "ERROR", JOptionPane.ERROR_MESSAGE);
+        }
+        return usuarios;
     }
-    
-    
-    /**
-     * Modulo Transporte
-    */
+    public ArrayList<Usuario> buscarUsuariosPorNombre(String nombreCompleto) {
+        ArrayList<Usuario> usuarios = new ArrayList<>();
+        try {
+            Connection cone = getConexion();
+            PreparedStatement pst = cone.prepareStatement(
+                "SELECT id, cedula, nombre_completo, correo_electronico, telefono, " +
+                "direccion, rol, nombre_usuario FROM usuario WHERE nombre_completo LIKE ? ORDER BY nombre_completo");
 
-    
-    /**
-     * Modulo Paquete_Turistico 
-    */
+            pst.setString(1, "%" + nombreCompleto + "%");
 
+            ResultSet rs = pst.executeQuery();
+            while (rs.next()) {
+                Usuario u = new Usuario();
+                u.setId(rs.getInt("id"));
+                u.setCedula(rs.getString("cedula"));
+                u.setNombreCompleto(rs.getString("nombre_completo"));
+                u.setCorreoElectronico(rs.getString("correo_electronico"));
+                u.setTelefono(rs.getString("telefono"));
+                u.setDireccion(rs.getString("direccion"));
+                u.setRol(rs.getString("rol"));
+                u.setNombreUsuario(rs.getString("nombre_usuario"));
 
+                usuarios.add(u);
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+            JOptionPane.showMessageDialog(null, "Error al buscar usuarios por nombre", 
+                "ERROR", JOptionPane.ERROR_MESSAGE);
+        }
+        return usuarios;
+    }
+
+    public Usuario obtenerUsuarioPorCedula(String cedula) {
+        Usuario usuario = null;
+        try {
+            Connection cone = getConexion();
+            PreparedStatement pst = cone.prepareStatement(
+                "SELECT * FROM usuario WHERE cedula = ?");
+            pst.setString(1, cedula);
+
+            ResultSet rs = pst.executeQuery();
+            if (rs.next()) {
+                usuario = new Usuario();
+                usuario.setId(rs.getInt("id"));
+                usuario.setCedula(rs.getString("cedula"));
+                usuario.setNombreCompleto(rs.getString("nombre_completo"));
+                usuario.setCorreoElectronico(rs.getString("correo_electronico"));
+                usuario.setTelefono(rs.getString("telefono"));
+                usuario.setDireccion(rs.getString("direccion"));
+                usuario.setRol(rs.getString("rol"));
+                usuario.setNombreUsuario(rs.getString("nombre_usuario"));
+                usuario.setContrasena(rs.getString("contrasena"));
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+            JOptionPane.showMessageDialog(null, "Error al buscar usuario por cédula", 
+                "ERROR", JOptionPane.ERROR_MESSAGE);
+        }
+        return usuario;
+    }
 }
