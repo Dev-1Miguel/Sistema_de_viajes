@@ -13,10 +13,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import javax.swing.JOptionPane;
 
-/**
- *
- * @author MICHELLE
- */
+
 public class Controlador {
 
     public boolean Login(String usuario, String clave) {
@@ -181,6 +178,87 @@ public class Controlador {
             System.out.println("Error al eliminar los datos");
         }
     }
+    
+    public ArrayList<Reserva> buscarReservas(
+            String origen, 
+            String destino, 
+            java.sql.Timestamp fechaInicio, 
+            java.sql.Timestamp fechaFin, 
+            String cedulaCliente) {
+
+        ArrayList<Reserva> reservas = new ArrayList<>();
+
+        try (Connection con = getConexion()) {
+            // Base de la consulta con JOIN para obtener la cédula del cliente
+            String sql = "SELECT r.id, r.cliente_id, r.destino, r.origen, r.fecha_reserva, r.fecha_viaje, " +
+                         "r.cantidad_pasajeros, r.clase, r.precio_total, r.estado, c.cedula, c.nombres_apellidos " +
+                         "FROM reserva r " +
+                         "JOIN cliente c ON r.cliente_id = c.id " +
+                         "WHERE 1=1 "; // para facilitar concatenar condiciones
+
+            // Lista para parámetros
+            ArrayList<Object> parametros = new ArrayList<>();
+
+            // Agregar condiciones dinámicas si los parámetros no son nulos o vacíos
+            if (origen != null && !origen.isEmpty()) {
+                sql += " AND r.origen = ? ";
+                parametros.add(origen);
+            }
+
+            if (destino != null && !destino.isEmpty()) {
+                sql += " AND r.destino = ? ";
+                parametros.add(destino);
+            }
+
+            if (fechaInicio != null) {
+                sql += " AND r.fecha_viaje >= ? ";
+                parametros.add(fechaInicio);
+            }
+
+            if (fechaFin != null) {
+                sql += " AND r.fecha_viaje <= ? ";
+                parametros.add(fechaFin);
+            }
+
+            if (cedulaCliente != null && !cedulaCliente.isEmpty()) {
+                sql += " AND c.cedula = ? ";
+                parametros.add(cedulaCliente);
+            }
+
+            PreparedStatement pst = con.prepareStatement(sql);
+
+            // Setear parámetros en PreparedStatement
+            for (int i = 0; i < parametros.size(); i++) {
+                pst.setObject(i + 1, parametros.get(i));
+            }
+
+            ResultSet rs = pst.executeQuery();
+
+            while (rs.next()) {
+                Reserva r = new Reserva();
+                r.setId(rs.getInt("id"));
+                r.setCliente_id(rs.getInt("cliente_id"));
+                r.setDestino(rs.getString("destino"));
+                r.setOrigen(rs.getString("origen"));
+                r.setFecha_reserva(rs.getTimestamp("fecha_reserva"));
+                r.setFecha_viaje(rs.getTimestamp("fecha_viaje"));
+                r.setCantidad_pasajeros(rs.getDouble("cantidad_pasajeros"));
+                r.setClase(rs.getString("clase"));
+                r.setPrecio_total(rs.getDouble("precio_total"));
+                r.setEstado(rs.getString("estado"));
+                r.setNombres_apellidos(rs.getString("nombres_apellidos")); // Nombre cliente
+                // Puedes añadir también la cédula si la clase Reserva tiene ese atributo
+
+                reservas.add(r);
+            }
+
+        } catch (SQLException ex) {
+            System.out.println("Error en búsqueda de reservas: " + ex.getMessage());
+        }
+
+        return reservas;
+    }
+ 
     public void EmitirFactura(Factura fa) {
         try {
             Connection cone = getConexion();
@@ -459,36 +537,36 @@ public class Controlador {
      * @param user
  */
     public void insertarUsuario(Usuario user) {
-        try {
-            Connection cone = getConexion();
-            PreparedStatement pst = cone.prepareStatement(
-                "INSERT INTO usuario (cedula, nombre_completo, correo_electronico, telefono, " +
-                "direccion, rol, nombre_usuario, contrasena) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        
-            pst.setString(1, user.getCedula());
-            pst.setString(2, user.getNombreCompleto());
-            pst.setString(3, user.getCorreoElectronico());
-            pst.setString(4, user.getTelefono());
-            pst.setString(5, user.getDireccion());
-            pst.setString(6, user.getRol());
-            pst.setString(7, user.getNombreUsuario());
-            pst.setString(8, user.getContrasena());
-        
-            pst.executeUpdate();
-            JOptionPane.showMessageDialog(null, "Usuario registrado correctamente", 
-                "INFORMACIÓN", JOptionPane.INFORMATION_MESSAGE);
-        } catch (SQLException ex) {
-            System.out.println(ex.getMessage());
-            JOptionPane.showMessageDialog(null, "Error al registrar usuario", 
-            "ERROR", JOptionPane.ERROR_MESSAGE);
-        }
+    try {
+        Connection cone = getConexion();
+        PreparedStatement pst = cone.prepareStatement(
+            "INSERT INTO usuario (cedula, nombre_completo, correo_electronico, telefono, direccion, rol, nombre_usuario, contrasena, fecha_registro, estado) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+        pst.setString(1, user.getCedula());
+        pst.setString(2, user.getNombreCompleto());
+        pst.setString(3, user.getCorreoElectronico());
+        pst.setString(4, user.getTelefono());
+        pst.setString(5, user.getDireccion());
+        pst.setString(6, user.getRol());
+        pst.setString(7, user.getNombreUsuario());
+        pst.setString(8, user.getContrasena());
+        pst.setTimestamp(9, user.getFechaRegistro());
+        pst.setString(10, user.getEstado());
+
+        pst.executeUpdate();
+        JOptionPane.showMessageDialog(null, "Usuario registrado correctamente", "INFORMACIÓN", JOptionPane.INFORMATION_MESSAGE);
+    } catch (SQLException ex) {
+        System.out.println(ex.getMessage());
+        JOptionPane.showMessageDialog(null, "Error al registrar usuario", "ERROR", JOptionPane.ERROR_MESSAGE);
     }
+}
+
     public void modificarUsuario(Usuario user) {
         try {
             Connection cone = getConexion();
             PreparedStatement pst = cone.prepareStatement(
-                "UPDATE usuario SET cedula=?, nombre_completo=?, correo_electronico=?, " +
-                "telefono=?, direccion=?, rol=?, nombre_usuario=?, contrasena=? WHERE id=?");
+                "UPDATE usuario SET cedula=?, nombre_completo=?, correo_electronico=?, telefono=?, direccion=?, rol=?, nombre_usuario=?, contrasena=?, fecha_registro=?, estado=? WHERE id=?");
 
             pst.setString(1, user.getCedula());
             pst.setString(2, user.getNombreCompleto());
@@ -498,51 +576,29 @@ public class Controlador {
             pst.setString(6, user.getRol());
             pst.setString(7, user.getNombreUsuario());
             pst.setString(8, user.getContrasena());
-            pst.setInt(9, user.getId());
+            pst.setTimestamp(9, user.getFechaRegistro());
+            pst.setString(10, user.getEstado());
+            pst.setInt(11, user.getId());
 
             int affectedRows = pst.executeUpdate();
             if (affectedRows > 0) {
-                JOptionPane.showMessageDialog(null, "Usuario modificado correctamente", 
-                    "INFORMACIÓN", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(null, "Usuario modificado correctamente", "INFORMACIÓN", JOptionPane.INFORMATION_MESSAGE);
             } else {
-                JOptionPane.showMessageDialog(null, "No se encontró el usuario a modificar", 
-                    "ADVERTENCIA", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(null, "No se encontró el usuario a modificar", "ADVERTENCIA", JOptionPane.WARNING_MESSAGE);
             }
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
-            JOptionPane.showMessageDialog(null, "Error al modificar usuario", 
-                "ERROR", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Error al modificar usuario", "ERROR", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    public void eliminarUsuario(int id) {
-        try {
-            Connection cone = getConexion();
-            PreparedStatement pst = cone.prepareStatement("DELETE FROM usuario WHERE id=?");
-            pst.setInt(1, id);
-
-            int affectedRows = pst.executeUpdate();
-            if (affectedRows > 0) {
-                JOptionPane.showMessageDialog(null, "Usuario eliminado correctamente", 
-                    "INFORMACIÓN", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(null, "No se encontró el usuario a eliminar", 
-                    "ADVERTENCIA", JOptionPane.WARNING_MESSAGE);
-            }
-        } catch (SQLException ex) {
-            System.out.println(ex.getMessage());
-            JOptionPane.showMessageDialog(null, "Error al eliminar usuario", 
-                "ERROR", JOptionPane.ERROR_MESSAGE);
-        }
-    }
     public ArrayList<Usuario> listaUsuarios() {
         ArrayList<Usuario> usuarios = new ArrayList<>();
         try {
             Connection cone = getConexion();
             Statement st = cone.createStatement();
             ResultSet resul = st.executeQuery(
-                "SELECT id, cedula, nombre_completo, correo_electronico, telefono, " +
-                "direccion, rol, nombre_usuario FROM usuario ORDER BY id");
+                "SELECT * FROM usuario ORDER BY id");
 
             while (resul.next()) {
                 Usuario u = new Usuario();
@@ -554,46 +610,39 @@ public class Controlador {
                 u.setDireccion(resul.getString("direccion"));
                 u.setRol(resul.getString("rol"));
                 u.setNombreUsuario(resul.getString("nombre_usuario"));
+                u.setContrasena(resul.getString("contrasena"));
+                u.setFechaRegistro(resul.getTimestamp("fecha_registro"));
+                u.setEstado(resul.getString("estado"));
 
                 usuarios.add(u);
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-            JOptionPane.showMessageDialog(null, "Error al cargar lista de usuarios", 
-                "ERROR", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Error al cargar lista de usuarios", "ERROR", JOptionPane.ERROR_MESSAGE);
         }
         return usuarios;
     }
-    public ArrayList<Usuario> buscarUsuariosPorNombre(String nombreCompleto) {
-        ArrayList<Usuario> usuarios = new ArrayList<>();
+    
+    public void eliminarUsuario(int id) {
         try {
             Connection cone = getConexion();
-            PreparedStatement pst = cone.prepareStatement(
-                "SELECT id, cedula, nombre_completo, correo_electronico, telefono, " +
-                "direccion, rol, nombre_usuario FROM usuario WHERE nombre_completo LIKE ? ORDER BY nombre_completo");
+            PreparedStatement pst = cone.prepareStatement("UPDATE usuario SET estado = ? WHERE id = ?");
+            pst.setString(1, "Inactivo");
+            pst.setInt(2, id);
 
-            pst.setString(1, "%" + nombreCompleto + "%");
-
-            ResultSet rs = pst.executeQuery();
-            while (rs.next()) {
-                Usuario u = new Usuario();
-                u.setId(rs.getInt("id"));
-                u.setCedula(rs.getString("cedula"));
-                u.setNombreCompleto(rs.getString("nombre_completo"));
-                u.setCorreoElectronico(rs.getString("correo_electronico"));
-                u.setTelefono(rs.getString("telefono"));
-                u.setDireccion(rs.getString("direccion"));
-                u.setRol(rs.getString("rol"));
-                u.setNombreUsuario(rs.getString("nombre_usuario"));
-
-                usuarios.add(u);
+            int affectedRows = pst.executeUpdate();
+            if (affectedRows > 0) {
+                JOptionPane.showMessageDialog(null, "Usuario marcado como inactivo correctamente",
+                        "INFORMACIÓN", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(null, "No se encontró el usuario a eliminar",
+                        "ADVERTENCIA", JOptionPane.WARNING_MESSAGE);
             }
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
-            JOptionPane.showMessageDialog(null, "Error al buscar usuarios por nombre", 
-                "ERROR", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Error al eliminar (inhabilitar) usuario",
+                    "ERROR", JOptionPane.ERROR_MESSAGE);
         }
-        return usuarios;
     }
 
     public Usuario obtenerUsuarioPorCedula(String cedula) {
@@ -616,12 +665,14 @@ public class Controlador {
                 usuario.setRol(rs.getString("rol"));
                 usuario.setNombreUsuario(rs.getString("nombre_usuario"));
                 usuario.setContrasena(rs.getString("contrasena"));
+                usuario.setFechaRegistro(rs.getTimestamp("fecha_registro"));
+                usuario.setEstado(rs.getString("estado"));
             }
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
-            JOptionPane.showMessageDialog(null, "Error al buscar usuario por cédula", 
-                "ERROR", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Error al buscar usuario por cédula", "ERROR", JOptionPane.ERROR_MESSAGE);
         }
         return usuario;
     }
+    
 }

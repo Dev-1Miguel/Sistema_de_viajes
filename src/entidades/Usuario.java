@@ -1,13 +1,7 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package entidades;
 
-/**
- *
- * @author Asus
- */
+import java.sql.Timestamp;
+
 public class Usuario {
     
     private int id;
@@ -19,12 +13,15 @@ public class Usuario {
     private String rol;
     private String nombreUsuario;
     private String contrasena;
+    private Timestamp fechaRegistro; 
+    private String estado;           
 
     public Usuario() {
     }
 
     public Usuario(int id, String cedula, String nombreCompleto, String correoElectronico, String telefono,
-                   String direccion, String rol, String nombreUsuario, String contrasena) {
+                   String direccion, String rol, String nombreUsuario, String contrasena,
+                   Timestamp fechaRegistro, String estado) {
         this.id = id;
         this.cedula = cedula;
         this.nombreCompleto = nombreCompleto;
@@ -34,7 +31,11 @@ public class Usuario {
         this.rol = rol;
         this.nombreUsuario = nombreUsuario;
         this.contrasena = contrasena;
+        this.fechaRegistro = fechaRegistro;
+        this.estado = estado;
     }
+
+    // Getters y Setters
 
     public int getId() {
         return id;
@@ -108,6 +109,22 @@ public class Usuario {
         this.contrasena = contrasena;
     }
 
+    public Timestamp getFechaRegistro() {
+        return fechaRegistro;
+    }
+
+    public void setFechaRegistro(Timestamp fechaRegistro) {
+        this.fechaRegistro = fechaRegistro;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+
     @Override
     public String toString() {
         return "Usuario{" +
@@ -120,6 +137,9 @@ public class Usuario {
                 ", rol='" + rol + '\'' +
                 ", nombreUsuario='" + nombreUsuario + '\'' +
                 ", contrasena='" + contrasena + '\'' +
+                ", fechaRegistro=" + fechaRegistro +
+                ", estado='" + estado + '\'' +
                 '}';
     }
 }
+
