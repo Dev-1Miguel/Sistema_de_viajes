@@ -68,7 +68,7 @@ public class JPModuloReserva extends javax.swing.JPanel {
 
         jLabel1.setFont(new java.awt.Font("Agency FB", 1, 36)); // NOI18N
         jLabel1.setText("RESERVA DE PASAJES");
-        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 20, -1, -1));
+        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 20, -1, -1));
         jPanel1.add(txtCedula, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 100, 230, -1));
 
         jLabel2.setFont(new java.awt.Font("Agency FB", 0, 18)); // NOI18N
